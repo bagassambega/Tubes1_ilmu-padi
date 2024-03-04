@@ -59,7 +59,33 @@ class Padibot(BaseLogic):
         closest = self.closestdiamond(board_bot, board)
         current_position = board_bot.position
         return abs(closest.x-current_position.x)+abs(closest.y-current_position.y)
+    
+    def get_directions(self,current_x, current_y, dest_x, dest_y):
+        # bikin biar geraknya rada zigzag
+        # cari jarak x dan y nya dulu
+        delta_x = abs(dest_x - current_x)
+        delta_y = abs(dest_y - current_y)
+        x=0
+        y=0
 
+        if (dest_x - current_x)<0:
+            x = -1 # jalan ke kiri
+        else:
+            x = 1 # jalan ke kanan
+
+        if (dest_y - current_y)<0:
+            y = -1 # jalan ke bawah
+        else:
+            y = 1 # jalan ke atas
+
+        if delta_x >= delta_y: # ini kalau posisinya belum kotak dia bakal gerak horizontal sampai kotak
+            dx = x
+            dy = 0
+        elif delta_x < delta_y: # kalau udah kotak dia bakal jalan vertikal
+            dy = y
+            dx = 0
+
+        return (dx, dy)
 
     def next_move(self, board_bot: GameObject, board: Board):
         props = board_bot.properties
@@ -85,7 +111,7 @@ class Padibot(BaseLogic):
                 self.goal_position = self.closestdiamond(board_bot,board)
 
         if self.goal_position is not None:
-            delta_x, delta_y = get_direction(
+            delta_x, delta_y = self.get_directions(
                 current_position.x,
                 current_position.y,
                 self.goal_position.x,
