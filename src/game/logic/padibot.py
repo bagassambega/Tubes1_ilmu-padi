@@ -24,6 +24,26 @@ class Padibot(BaseLogic):
         
         return diamond_loc
     
+    
+    def prioritizereddiamond(self, board_bot: GameObject, board: Board):
+        # Prioritasin diamond merah jika salah satu lebih dekat ke diamond merah
+        current_position = board_bot.position
+
+        all_diamonds = board.diamonds
+        red_diamonds = [diamond for diamond in all_diamonds if diamond.properties.points == 2]
+        
+        if not red_diamonds:
+            return
+        
+        closest_red_diamond = min(red_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))        
+        closest_normal_diamond = min(all_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
+        
+        # Ambil diamond merah jika letaknya sangat dekat dibandingkan dengan diamond biasa
+        if abs(closest_red_diamond.position.x - current_position.x) + abs(closest_red_diamond.position.y - current_position.y) < abs(closest_normal_diamond.position.x - current_position.x) + abs(closest_normal_diamond.position.y - current_position.y):
+            self.goal_position = closest_red_diamond.position
+        else:
+            self.goal_position = closest_normal_diamond.position
+    
     def botaroundbase(self, board_bot: GameObject):
         # memeriksa apakah lokasi bot lagi di sekitar base
         props = board_bot.properties
@@ -54,12 +74,35 @@ class Padibot(BaseLogic):
         closest_diamond = min(board.diamonds, key=lambda diamond: (abs(diamond.position.x-current_position.x)+abs(diamond.position.y-current_position.y)))
         return closest_diamond.position
     
+    def closestreddiamond(self, board_bot: GameObject, board:Board):
+        # cari red diamond terdekat dengan bot (bebas di mana aja)
+        current_position = board_bot.position
+        red_diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 2]
+
+        if not red_diamonds:
+            return None  # Jika tidak ada red diamond, kembalikan None
+
+        closest_red_diamond = min(red_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
+        return closest_red_diamond.position
+
     def closestdiamonddist(self, board_bot: GameObject,board: Board):
         # mencari jarak bot dengan diamond terdekat
         closest = self.closestdiamond(board_bot, board)
         current_position = board_bot.position
         return abs(closest.x-current_position.x)+abs(closest.y-current_position.y)
     
+    def closestreddiamonddist(self, board_bot: GameObject, board: Board):
+        # mencari jarak bot dengan diamond merah terdekat
+        current_position = board_bot.position
+        red_diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 2]
+
+        if not red_diamonds:
+            return None  # Jika tidak ada red diamond, kembalikan None
+
+        closest_red_diamond = min(red_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
+        distance = abs(closest_red_diamond.position.x - current_position.x) + abs(closest_red_diamond.position.y - current_position.y)
+        return distance
+
     def calculateDistanceToBots(self, board_bot: GameObject, enemy_bot: GameObject):
         # Menghitung jarak (x, y) dari enemy bot ke kita
         return (enemy_bot.position.x - board_bot.position.x, enemy_bot.position.y - board_bot.position.y)
@@ -108,11 +151,20 @@ class Padibot(BaseLogic):
         return (dx, dy)
 
     def next_move(self, board_bot: GameObject, board: Board):
-        props = board_bot.properties
+        props = board_bot.propertiescx
         current_position = board_bot.position
         
+        max_travel_time = props.milliseconds_left - 1 # 1 detik buat jaga-jaga
+        distance_to_base = abs(props.base.x - current_position.x) + abs(props.base.y - current_position.y)
+        time_to_return = distance_to_base #sesuain disini kalau bot kita bisa gerak lbh cepet dr 1 detik
+        
+        # kalau mepet waktu, langsung balik ke base
+        if time_to_return >= max_travel_time:
+            base = board_bot.properties.base
+            self.goal_position = base
+        
         # kalau diamond yang dimiliki sudah lebih dari 3 maka bot diarahkan balik ke base
-        if props.diamonds >=3:
+        elif props.diamonds >=3:
             # kalau pas jalan pulang ternyata ada diamond yang deket dan inventory belum penuh (sekalian ambil)
             if(self.closestdiamonddist(board_bot,board)==1) and props.diamonds <5:
                 self.goal_position = self.closestdiamond(board_bot,board)
@@ -128,7 +180,13 @@ class Padibot(BaseLogic):
                 self.goal_position = self.closestdiamondbase(board_bot,diamond_list)
             # kalau gak ada baru cari yang lebih jauh
             else:
-                self.goal_position = self.closestdiamond(board_bot,board)
+                # Prioritaskan red diamond jika lebih dekat dari pada diamond biasa
+                if self.closestreddiamonddist(board_bot, board) is not None:
+                    if self.closestreddiamonddist(board_bot, board) < self.closestdiamonddist(board_bot, board):
+                        diamond_list = self.diamondsaroundbase(board_bot,board)
+                        self.goal_position = self.closestreddiamond(board_bot,diamond_list)
+                else:
+                    self.goal_position = self.closestdiamond(board_bot, board)
 
         if self.goal_position is not None:
             delta_x, delta_y = self.get_directions(
