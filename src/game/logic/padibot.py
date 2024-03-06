@@ -60,6 +60,26 @@ class Padibot(BaseLogic):
         current_position = board_bot.position
         return abs(closest.x-current_position.x)+abs(closest.y-current_position.y)
     
+    def calculateDistanceToBots(self, board_bot: GameObject, enemy_bot: GameObject):
+        # Menghitung jarak (x, y) dari enemy bot ke kita
+        return (enemy_bot.position.x - board_bot.position.x, enemy_bot.position.y - board_bot.position.y)
+    
+    def findAllBots(self, board_bot: GameObject, board: Board):
+        # Mencari semua bot yang memiliki diamonds > 3 saja dan diamonds nya lebih banyak dari kita
+        listBots = []
+        for bot in board.bots:
+            if (bot.id != board_bot.id):
+                if (bot.properties.diamonds > board_bot.properties.diamonds and bot.properties.diamonds >= 3):
+                    listBots.append(bot)
+        return listBots
+    
+    def chaseBots(self, board_bot: GameObject, listBots: Optional[GameObject], board: Board):
+        for bot in listBots:
+            dist = self.calculateDistanceToBots(board_bot, bot)
+            if (dist[0] <= 3 and dist[1] <= 3):
+                self.goal_position = bot.position
+                return
+    
     def get_directions(self,current_x, current_y, dest_x, dest_y):
         # bikin biar geraknya rada zigzag
         # cari jarak x dan y nya dulu
