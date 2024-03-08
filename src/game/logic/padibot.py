@@ -12,6 +12,9 @@ class Padibot(BaseLogic):
         self.goal_position: Optional[Position] = None
         self.current_direction = 0
 
+    def get_teleport_objects(self, board: Board) -> List[GameObject]:
+        return [d for d in board.game_objects if d.type == "TeleportGameObject"]
+    
     def diamondsaroundbase(self, board_bot: GameObject, board:Board):
         # fungsi mengambil lokasi kumpulan diamond yang ada di sekitar base dalam bentuk list
         props = board_bot.properties
@@ -23,7 +26,6 @@ class Padibot(BaseLogic):
                        and base_y - 3 <= diamond.position.y <= base_y + 3]
         
         return diamond_loc
-    
     
     def prioritizereddiamond(self, board_bot: GameObject, board: Board):
         # Prioritasin diamond merah jika salah satu lebih dekat ke diamond merah
@@ -163,6 +165,8 @@ class Padibot(BaseLogic):
         # cari jarak x dan y nya dulu
         current_position = board_bot.position
         bot_positions = [bot.position for bot in self.findAllBots(board_bot,board)]
+        teleporters = self.get_teleport_objects(board)
+        print(teleporters)
         temp = current_position
         delta_x = abs(dest_x - current_x)
         delta_y = abs(dest_y - current_y)
@@ -182,24 +186,29 @@ class Padibot(BaseLogic):
         if delta_x >= delta_y: # ini kalau posisinya belum kotak dia bakal gerak horizontal sampai kotak
             dx = x
             dy = 0
-            temp = current_position.x+dx
-            if(temp in bot_positions):
-                dx = 0
-                dy = y
+            # temp.x+=dx
+            print(current_position)
+            print(temp)
+            # if(temp in bot_positions or (current_position.x+dx==teleporters[0].position.x and current_position.y==teleporters[0].position.y) or (current_position.x+dx==teleporters[1].position.x and current_position.y==teleporters[0].position.y)):
+            #     print("ada sesuatu x")
+            #     dx = -x
+            #     dy = 0
         elif delta_x < delta_y: # kalau udah kotak dia bakal jalan vertikal
             dy = y
             dx = 0
-            temp = current_position.y+dy
-            if(temp in bot_positions):
-                dx = x
-                dy = 0
+            # temp.y+=dy
+            print(current_position)
+            print(temp)
+            # if(temp in bot_positions or (current_position.y+dy*2==teleporters[0].position.y and current_position.x==teleporters[0].position.x) or (current_position.y+dy*2==teleporters[1].position.y and current_position.y==teleporters[1].position.y)):
+            #     print("ada sesuatu y")
+            #     dx = 0
+            #     dy = -y
 
         return (dx, dy)
 
     def next_move(self, board_bot: GameObject, board: Board):
         props = board_bot.properties
         current_position = board_bot.position
-        
         max_travel_time = props.milliseconds_left # 1 detik buat jaga-jaga
         distance_to_base = abs(props.base.x - current_position.x) + abs(props.base.y - current_position.y)
         time_to_return = distance_to_base #sesuain disini kalau bot kita bisa gerak lbh cepet dr 1 detik
@@ -210,11 +219,12 @@ class Padibot(BaseLogic):
             self.goal_position = base
         
         # kalau pas lewat base ke base dulu
-        elif self.basedistance(board_bot, board)==2 and props.diamonds >=3:
+        elif (self.basedistance(board_bot, board)==2 and props.diamonds >2) or (self.basedistance(board_bot, board)==1 and props.diamonds >0):
             base = board_bot.properties.base
             self.goal_position = base
 
-        elif self.basedistance(board_bot, board)==1 and props.diamonds >0:
+        elif props.diamonds ==5:
+            print("full capacity")
             base = board_bot.properties.base
             self.goal_position = base
 
@@ -222,32 +232,52 @@ class Padibot(BaseLogic):
         elif props.diamonds >=3:
             print("diamond 3")
             # kalau pas jalan pulang ternyata ada diamond yang deket dan inventory belum penuh (sekalian ambil)
-            if(self.closestdiamonddist(board_bot,board)==1) and self.closestdiamond(board_bot,board) is not None and props.diamonds <5:
+            if self.cekdiamondbase(board_bot,board):
+                print("diamond base lebih muatan bro")
+                diamond_list = self.diamondsaroundbase(board_bot,board)
+                self.goal_position = self.closestdiamondbase(board_bot,diamond_list)
+            elif(self.closestdiamonddist(board_bot,board)==1) and self.closestdiamond(board_bot,board) is not None:
                 self.goal_position = self.closestdiamond(board_bot,board)
             else:
                 base = board_bot.properties.base
                 self.goal_position = base
             
         # kalau masih kurang 3 akan cari diamond
-        elif props.diamonds < 3:
-            print("diamond kurang")
+        elif props.diamonds <3:
+            print("diamond kurang dari 3")
             # didahuluin cari yang ada di sekitar base dulu
-            if self.cekdiamondbase(board_bot,board) and self.botaroundbase(board_bot):
+            if (self.cekdiamondbase(board_bot,board) and self.botaroundbase(board_bot)) or (self.cekdiamondbase(board_bot,board) and len(self.diamondsaroundbase(board_bot,board))>=2) :
                 print("diamond base")
                 diamond_list = self.diamondsaroundbase(board_bot,board)
                 self.goal_position = self.closestdiamondbase(board_bot,diamond_list)
             # kalau gak ada baru cari yang lebih jauh
-            else:
+            
                 # Prioritaskan red diamond jika lebih dekat dari pada diamond biasa
-                if self.closestreddiamonddist(board_bot, board) is not None and self.closestreddiamonddist(board_bot, board) < self.closestdiamonddist(board_bot, board):
-                        print("red diamond")
+            elif self.closestreddiamond(board_bot, board) is not None: 
+                if (self.closestdiamond(board_bot, board) is not None):
+                    if (self.closestreddiamonddist(board_bot, board) < self.closestdiamonddist(board_bot, board)) :
+                        print("red diamond @1")
                         self.goal_position = self.closestreddiamond(board_bot,board)
-                        print()
+                    else:
+                        print("red diamond @2")
+                        self.goal_position = self.closestdiamond(board_bot, board)
                 else:
-                    print("diamond biru")
-                    self.goal_position = self.closestdiamond(board_bot, board)
+                    self.goal_position = self.closestreddiamond(board_bot,board)
+
+            else:
+                print("diamond biru")
+                self.goal_position = self.closestdiamond(board_bot, board)
 
         if self.goal_position is not None:
+            delta_x, delta_y = self.get_directions(
+                current_position.x,
+                current_position.y,
+                self.goal_position.x,
+                self.goal_position.y,
+                board_bot,board
+            )
+        else:
+            self.goal_position = board_bot.properties.base
             delta_x, delta_y = self.get_directions(
                 current_position.x,
                 current_position.y,
