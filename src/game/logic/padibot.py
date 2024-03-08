@@ -71,13 +71,14 @@ class Padibot(BaseLogic):
     def closestdiamond(self, board_bot: GameObject,board:Board):
         # cari diamond terdekat dengan bot (bebas di mana aja)
         current_position = board_bot.position
-        closest_diamond = min(board.diamonds, key=lambda diamond: (abs(diamond.position.x-current_position.x)+abs(diamond.position.y-current_position.y)))
+        diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 1]
+        closest_diamond = min(diamonds, key=lambda diamond: (abs(diamond.position.x-current_position.x)+abs(diamond.position.y-current_position.y)))
         return closest_diamond.position
     
     def closestreddiamond(self, board_bot: GameObject, board:Board):
         # cari red diamond terdekat dengan bot (bebas di mana aja)
         current_position = board_bot.position
-        red_diamonds = [diamond for diamond in board.diamonds if diamond.points == 2]
+        red_diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 2]
 
         if not red_diamonds:
             return None  # Jika tidak ada red diamond, kembalikan None
@@ -102,6 +103,12 @@ class Padibot(BaseLogic):
         closest_red_diamond = min(red_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
         distance = abs(closest_red_diamond.position.x - current_position.x) + abs(closest_red_diamond.position.y - current_position.y)
         return distance
+    
+    def basedistance(self, board_bot: GameObject, board: Board):
+        # mencari jarak bot dengan base
+        current_position = board_bot.position
+        base = board_bot.properties.base
+        return abs(base.x - current_position.x) + abs(base.y - current_position.y)
 
     def calculateDistanceToBots(self, board_bot: GameObject, enemy_bot: GameObject):
         # Menghitung jarak (x, y) dari enemy bot ke kita
@@ -160,10 +167,18 @@ class Padibot(BaseLogic):
         
         # kalau mepet waktu, langsung balik ke base
         if time_to_return >= max_travel_time:
-            print("time")
             base = board_bot.properties.base
             self.goal_position = base
         
+        # kalau pas lewat base ke base dulu
+        elif self.basedistance(board_bot, board)==2 and props.diamonds >=2:
+            base = board_bot.properties.base
+            self.goal_position = base
+
+        elif self.basedistance(board_bot, board)==1 and props.diamonds >0:
+            base = board_bot.properties.base
+            self.goal_position = base
+
         # kalau diamond yang dimiliki sudah lebih dari 3 maka bot diarahkan balik ke base
         elif props.diamonds >=3:
             print("diamond 3")
