@@ -73,7 +73,13 @@ class Padibot(BaseLogic):
         current_position = board_bot.position
         diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 1]
         closest_diamond = min(diamonds, key=lambda diamond: (abs(diamond.position.x-current_position.x)+abs(diamond.position.y-current_position.y)))
-        return closest_diamond.position
+        if diamonds:
+            closest_diamond = min(diamonds, key=lambda diamond: (abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y)))
+            closest = closest_diamond.position
+        else:
+            closest = None  
+
+        return closest
     
     def closestreddiamond(self, board_bot: GameObject, board:Board):
         # cari red diamond terdekat dengan bot (bebas di mana aja)
@@ -130,9 +136,34 @@ class Padibot(BaseLogic):
                 self.goal_position = bot.position
                 return
     
-    def get_directions(self,current_x, current_y, dest_x, dest_y):
+    def calculateDistanceToBots(self, board_bot: GameObject, enemy_bot: GameObject):
+        # Menghitung jarak (x, y) dari enemy bot ke kita
+        return (enemy_bot.position.x - board_bot.position.x, enemy_bot.position.y - board_bot.position.y)
+    
+    def findAllBots(self, board_bot: GameObject, board: Board):
+        # Mencari semua bot yang memiliki diamonds > 3 saja dan diamonds nya lebih banyak dari kita
+        listBots = []
+        for bot in board.bots:
+            # Ignore bot sendiri dan bot yang ada di base sendiri
+            if (bot.id != board_bot.id and bot.position != (bot.properties.base.x, bot.properties.base.y)):
+                if (bot.properties.diamonds > board_bot.properties.diamonds and bot.properties.diamonds >= 3):
+                    listBots.append(bot)
+        return listBots
+    
+    def chaseBots(self, board_bot: GameObject, listBots: Optional[GameObject], board: Board):
+        for bot in listBots:
+            dist = self.calculateDistanceToBots(board_bot, bot)
+            if (dist[0] <= 3 and dist[1] <= 3):
+                self.goal_position = bot.position
+                return True
+        return False
+    
+    def get_directions(self,current_x, current_y, dest_x, dest_y, board_bot: GameObject, board: Board):
         # bikin biar geraknya rada zigzag
         # cari jarak x dan y nya dulu
+        current_position = board_bot.position
+        bot_positions = [bot.position for bot in self.findAllBots(board_bot,board)]
+        temp = current_position
         delta_x = abs(dest_x - current_x)
         delta_y = abs(dest_y - current_y)
         x=0
@@ -151,9 +182,17 @@ class Padibot(BaseLogic):
         if delta_x >= delta_y: # ini kalau posisinya belum kotak dia bakal gerak horizontal sampai kotak
             dx = x
             dy = 0
+            temp = current_position.x+dx
+            if(temp in bot_positions):
+                dx = 0
+                dy = y
         elif delta_x < delta_y: # kalau udah kotak dia bakal jalan vertikal
             dy = y
             dx = 0
+            temp = current_position.y+dy
+            if(temp in bot_positions):
+                dx = x
+                dy = 0
 
         return (dx, dy)
 
@@ -171,7 +210,7 @@ class Padibot(BaseLogic):
             self.goal_position = base
         
         # kalau pas lewat base ke base dulu
-        elif self.basedistance(board_bot, board)==2 and props.diamonds >=2:
+        elif self.basedistance(board_bot, board)==2 and props.diamonds >=3:
             base = board_bot.properties.base
             self.goal_position = base
 
@@ -183,7 +222,7 @@ class Padibot(BaseLogic):
         elif props.diamonds >=3:
             print("diamond 3")
             # kalau pas jalan pulang ternyata ada diamond yang deket dan inventory belum penuh (sekalian ambil)
-            if(self.closestdiamonddist(board_bot,board)==1) and props.diamonds <5:
+            if(self.closestdiamonddist(board_bot,board)==1) and self.closestdiamond(board_bot,board) is not None and props.diamonds <5:
                 self.goal_position = self.closestdiamond(board_bot,board)
             else:
                 base = board_bot.properties.base
@@ -214,6 +253,7 @@ class Padibot(BaseLogic):
                 current_position.y,
                 self.goal_position.x,
                 self.goal_position.y,
+                board_bot,board
             )
 
         return delta_x, delta_y
