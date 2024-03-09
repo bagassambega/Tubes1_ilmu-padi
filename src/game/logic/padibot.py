@@ -214,8 +214,10 @@ class Padibot(BaseLogic):
         elif props.diamonds >=3:
             print("diamond 3")
             # ternyata ada diamond dekat base, maka bot akan ke sana
-            if self.closestdiamond(board_bot,board) is not None:
-                if self.closestdiamonddist(board_bot,board)==1:
+            if self.closestdiamond(board_bot,board) is not None or self.closestreddiamond(board_bot,board) is not None:
+                if props.diamonds == 3 and self.closestreddiamond(board_bot,board) == 2:
+                    self.goal_position = self.closestreddiamond(board_bot,board)
+                elif self.closestdiamonddist(board_bot,board)==1:
                     self.goal_position = self.closestdiamond(board_bot,board)
                 else:
                     base = board_bot.properties.base
