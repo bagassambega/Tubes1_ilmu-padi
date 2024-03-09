@@ -10,6 +10,7 @@ class Padibot(BaseLogic):
         self.goal_position: Optional[Position] = None
         self.current_direction = 0
         self.chaseSteps = 0
+        self.isPortal = False
 
     #! DIAMOND SECTION
     # fungsi mengambil lokasi kumpulan diamond yang ada di sekitar base dalam bentuk list
@@ -126,6 +127,7 @@ class Padibot(BaseLogic):
         else:
             self.goal_position = None
             self.chaseSteps = 0
+            self.isPortal = False
             return False
     
     #! RED BUTTON
@@ -160,6 +162,7 @@ class Padibot(BaseLogic):
         distToBase = abs(board_bot.properties.base.y - teleporters[1].position.y) + abs(board_bot.properties.base.x - teleporters[1].position.x)
         distToBot = abs(board_bot.position.x - teleporters[0].position.x) + abs(board_bot.position.y - teleporters[0].position.y)
         if (distToBase + distToBot < self.basedistance(board_bot)):
+            self.isPortal = True
             self.goal_position = teleporters[0].position
 
     #! GET DIRECTIONS
@@ -263,7 +266,7 @@ class Padibot(BaseLogic):
         if self.goal_position is None:
             self.goal_position = board_bot.properties.base
         
-        if self.goal_position == board_bot.properties.base:
+        if self.goal_position == board_bot.properties.base and not self.isPortal:
             self.goToBaseWithTeleporter(board_bot, board)
         
         delta_x, delta_y = self.get_directions(
