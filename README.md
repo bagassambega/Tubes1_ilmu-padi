@@ -50,4 +50,3 @@ atau
 chmod +x ./run-bots.sh
 ./run-bots.sh
 ```
-```
