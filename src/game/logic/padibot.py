@@ -140,8 +140,9 @@ class Padibot(BaseLogic):
     # Compare jarak closest diamond dengan red button. Lebih baik generate ulang daripada ke diamond jauh
     # Hanya jika diamond yang ada di board sedikit (pre-checked in next_move)
     def compareClosestDiamondToRedButton(self, board_bot: GameObject, board: Board):
-        if self.calculateDistanceRedButton(board_bot, board) < self.closestdiamonddist(board_bot, board):
-            return True
+        if self.closestdiamond(board_bot,board) is not None:
+            if self.calculateDistanceRedButton(board_bot, board) < self.closestdiamonddist(board_bot, board):
+                return True
         return False
     
     # Menghitung jarak ke red button 
