@@ -155,18 +155,6 @@ class Padibot(BaseLogic):
         teleporters = [item for item in board.game_objects if item.type == "TeleportGameObject"]
         return sorted(teleporters, key=lambda tele: (abs(tele.position.x - board_bot.position.x) + abs(tele.position.y - board_bot.position.y)))
     
-    # Deteksi diamond di sekitar teleporter yang jauh jika diamond dekat kita atau base habis
-    def detectDiamondTeleporter(self, board_bot: GameObject, board: Board):
-        teleporters = self.findAllTeleporter(board_bot, board)
-        # Closest teleporter: 0, furthest: 1
-        farTeleporter = teleporters[1]
-        diamondCloseTeleporter = []
-        for diamond in board.diamonds:
-            if abs(diamond.position.x - farTeleporter.position.x) <= 3 and abs(diamond.position.y - farTeleporter.position.y) <= 3:
-                diamondCloseTeleporter.append(diamond)
-        return len(diamondCloseTeleporter) >= 3
-        # Hanya jika worth it, diamond > 3
-    
     # Mencari jarak dari teleporter ke base
     def goToBaseWithTeleporter(self, board_bot: GameObject, board: Board):
         teleporters = self.findAllTeleporter(board_bot, board)
@@ -254,6 +242,8 @@ class Padibot(BaseLogic):
                 self.chaseSteps += 1
             # kalau gak ada baru cari yang lebih jauh
             # Prioritaskan red diamond jika lebih dekat dari pada diamond biasa
+            elif self.compareClosestDiamondToRedButton(board_bot, board):
+                self.goal_position = self.findRedButton(board).position
             elif self.closestreddiamond(board_bot, board) is not None: 
                 if (self.closestdiamond(board_bot, board) is not None):
                     if (self.closestreddiamonddist(board_bot, board) < self.closestdiamonddist(board_bot, board)) :
