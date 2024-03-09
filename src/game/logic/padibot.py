@@ -10,7 +10,6 @@ class Padibot(BaseLogic):
         self.goal_position: Optional[Position] = None
         self.current_direction = 0
         self.chaseSteps = 0
-        self.isPortal = False
 
     #! DIAMOND SECTION
     # fungsi mengambil lokasi kumpulan diamond yang ada di sekitar base dalam bentuk list
