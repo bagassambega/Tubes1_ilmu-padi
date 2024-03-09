@@ -26,6 +26,11 @@ Kelompok menggabungkan beberapa alternatif strategi greedy pada bot agar program
 4. Jika tidak ada berlian yang dekat maupun bot yang memenuhi untuk dikejar, maka bot akan menuju red button jika jaraknya lebih dekat dibandingkan diamond terdekat untuk reset diamonds yang ada dalam permainan.
 5. Saat bot sudah memiliki cukup diamonds, bot akan kembali ke base. Saat bot menuju base, jika masih ada slot kosong pada inventory dan melewati suatu area yang masih memiliki diamonds, bot akan menuju diamond tersebut. Lalu jika terdapat teleporter yang dapat mempersingkat jarak tempuh bot ke base, bot akan memakai teleporter tersebut, jika tidak, bot akan langsung menuju ke base.
 
+Implementasi dari algoritma tersebut dapat ditemukan di file _padibot.py_ pada strutktur:
+```
+src/game/logic/padibot.py
+```
+
 ## Penggunaan Program
 Sebelum proses instalasi, pengguna harus memasang _requirements_ sebagai berikut:
 - NodeJS (npm)
@@ -52,5 +57,5 @@ chmod +x ./run-bots.sh
 ```
 5. Pemain dapat menjalankan bot secara manual dengan memasukkan _command_ :
 ```
-python main.py --logic Padibot --email=ilmupadi@email.com --name=padibot --password=123456 --team etimo
+python main.py --logic Padibot --email=ilmupadi@email.com --name=stima --password=123456 --team etimo
 ```

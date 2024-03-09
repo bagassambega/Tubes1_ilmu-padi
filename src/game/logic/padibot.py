@@ -14,6 +14,7 @@ class Padibot(BaseLogic):
 
     #! DIAMOND SECTION
     # fungsi mengambil lokasi kumpulan diamond yang ada di sekitar base dalam bentuk list
+    # implementasi greedy by closest to base
     def diamondsaroundbase(self, board_bot: GameObject, board:Board):
         props = board_bot.properties
         diamonds = board.diamonds
@@ -26,18 +27,21 @@ class Padibot(BaseLogic):
         return diamond_loc
     
     # memeriksa apakah lokasi bot lagi di sekitar base
+    # implementasi greedy by closest to base
     def botaroundbase(self, board_bot: GameObject):
         props = board_bot.properties
         current_position = board_bot.position
         return ((props.base.x-3) <= current_position.x <= (props.base.x+3) and (props.base.y-3) <= current_position.y <= (props.base.y+3))
     
     # mencari diamond biru yang paling dekat base dengan posisi bot
+    # implementasi greedy by shortest path to current position
     def closestdiamondbase(self, board_bot: GameObject, diamonds: List[Position]):
         current_position = board_bot.position
         closest_diamond = min(diamonds, key=lambda diamond: abs(diamond.x - current_position.x) + abs(diamond.y - current_position.y))
         return closest_diamond
     
     # cek apakah ada diamond sekitar base
+    # implementasi greedy by closest to base
     def cekdiamondbase(self, board_bot: GameObject, board:Board):
         ada = False
         diamonds = board.diamonds
@@ -50,6 +54,7 @@ class Padibot(BaseLogic):
         return ada
     
     # cari diamond terdekat dengan bot (bebas di mana aja)
+    # implementasi greedy by chasing diamond
     def closestdiamond(self, board_bot: GameObject,board:Board):
         current_position = board_bot.position
         diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 1]
@@ -69,6 +74,7 @@ class Padibot(BaseLogic):
         return abs(closest.x-current_position.x)+abs(closest.y-current_position.y)
     
      # cari red diamond terdekat dengan bot (bebas di mana aja)
+     # implementasi greedy by chasing diamond
     def closestreddiamond(self, board_bot: GameObject, board:Board):
         current_position = board_bot.position
         red_diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 2]
@@ -99,6 +105,7 @@ class Padibot(BaseLogic):
         return abs(base.x - current_position.x) + abs(base.y - current_position.y)
 
     #! BOT SECTION
+    # implementasi greedy by chasing enemy
     # Menghitung jarak (x, y) dari enemy bot ke kita
     def calculateDistanceToBots(self, board_bot: GameObject, enemy_bot: GameObject):
         return (enemy_bot.position.x - board_bot.position.x, enemy_bot.position.y - board_bot.position.y)
@@ -135,6 +142,7 @@ class Padibot(BaseLogic):
             return False
     
     #! RED BUTTON
+    # implementasi greedy by inventory
     # Mencari red button
     def findRedButton(self, board: Board):
         for item in board.game_objects:
@@ -155,6 +163,7 @@ class Padibot(BaseLogic):
         return abs(redButton.position.x - board_bot.position.x) + abs(redButton.position.y - board_bot.position.y)
     
     #! TELEPORTER
+    # implementasi dari greedy by shortest path
     # Mencari semua teleporter yang ada
     def findAllTeleporter(self, board_bot: GameObject, board: Board):
         teleporters = [item for item in board.game_objects if item.type == "TeleportGameObject"]
