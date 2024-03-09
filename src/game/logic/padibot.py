@@ -160,6 +160,8 @@ class Padibot(BaseLogic):
     def goToBaseWithTeleporter(self, board_bot: GameObject, board: Board):
         teleporters = self.findAllTeleporter(board_bot, board)
         distToBase = abs(board_bot.properties.base.y - teleporters[1].position.y) + abs(board_bot.properties.base.x - teleporters[1].position.x)
+        if (distToBase == abs(board_bot.properties.base.y - teleporters[0].position.y) + abs(board_bot.properties.base.x - teleporters[0].position.x)):
+            return
         distToBot = abs(board_bot.position.x - teleporters[0].position.x) + abs(board_bot.position.y - teleporters[0].position.y)
         if (distToBase + distToBot < self.basedistance(board_bot)):
             self.isPortal = True
@@ -218,9 +220,9 @@ class Padibot(BaseLogic):
             print("diamond 3")
             # ternyata ada diamond dekat base, maka bot akan ke sana
             if self.closestdiamond(board_bot,board) is not None or self.closestreddiamond(board_bot,board) is not None:
-                if props.diamonds == 3 and self.closestreddiamond(board_bot,board) == 2:
+                if props.diamonds == 3 and self.closestreddiamonddist(board_bot,board) <= 2:
                     self.goal_position = self.closestreddiamond(board_bot,board)
-                elif self.closestdiamonddist(board_bot,board)==1:
+                elif self.closestdiamonddist(board_bot,board)<=2:
                     self.goal_position = self.closestdiamond(board_bot,board)
                 else:
                     base = board_bot.properties.base
