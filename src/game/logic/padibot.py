@@ -237,6 +237,9 @@ class Padibot(BaseLogic):
             elif self.closestdiamond(board_bot,board) is not None:
                 if self.closestdiamonddist(board_bot,board)==1:
                     self.goal_position = self.closestdiamond(board_bot,board)
+                else:
+                    base = board_bot.properties.base
+                    self.goal_position = base
             else:
             # balik ke base karena diamond sudah banyak
                 base = board_bot.properties.base
