@@ -46,7 +46,7 @@ class Padibot(BaseLogic):
         # lokasi diamonds sekitar base
         for diamond in diamonds:
             if (board_bot.properties.base.x-2) <= diamond.position.x <= (board_bot.properties.base.x+2) and (board_bot.properties.base.y-2) <= diamond.position.y <= (board_bot.properties.base.y+2):
-               return True
+                return True
                 
         return ada
     
@@ -89,7 +89,7 @@ class Padibot(BaseLogic):
         return distance
     
     # mencari jarak bot dengan base
-    def basedistance(self, board_bot: GameObject, board: Board):
+    def basedistance(self, board_bot: GameObject):
         # mencari jarak bot dengan base
         current_position = board_bot.position
         base = board_bot.properties.base
@@ -100,7 +100,7 @@ class Padibot(BaseLogic):
     def calculateDistanceToBots(self, board_bot: GameObject, enemy_bot: GameObject):
         return (enemy_bot.position.x - board_bot.position.x, enemy_bot.position.y - board_bot.position.y)
     
-    # Mencari semua bot yang memiliki diamonds > 3 saja dan diamonds nya lebih banyak dari kita
+    # Mencari semua bot yang memiliki diamonds >= 3 saja dan diamonds nya lebih banyak dari kita
     def findAllBots(self, board_bot: GameObject, board: Board):
         listBots = []
         for bot in board.bots:
@@ -109,14 +109,26 @@ class Padibot(BaseLogic):
                     listBots.append(bot)
         return listBots
     
-    # Menjadikan bot sebagai goal_position, jika jarak ke bot musuh adalah 3
-    def chaseBots(self, board_bot: GameObject, listBots: Optional[GameObject]) -> bool:
-        for bot in listBots:
-            dist = self.calculateDistanceToBots(board_bot, bot)
-            if (dist[0] <= 3 and dist[1] <= 3):
-                self.goal_position = bot.position
-                return True
-        return False
+    # Menjadikan bot sebagai goal_position, jika jarak ke bot musuh adalah 3, dan jarak bot kita ke base tidak lebih dari 6
+    def chaseBots(self, board_bot: GameObject, board: Board):
+        if self.basedistance(board_bot) <= 4 and self.chaseSteps <= 5:
+            listBots = self.findAllBots(board_bot, board)
+            for bot in listBots:
+                dist = self.calculateDistanceToBots(board_bot, bot)
+                if (dist[0] == 0 and dist[1] == 0):
+                    # Bot sudah berhasil di-tackle, kembali ke base
+                    self.goal_position = board_bot.properties.base
+                    return False
+                elif (dist[0] <= 3 and dist[1] <= 3):
+                    self.goal_position = bot.position
+                    return True
+                else:
+                    self.goal_position = None
+                    return False
+        else:
+            self.goal_position = None
+            self.chaseSteps = 0
+            return False
     
     #! RED BUTTON
     # Mencari red button
@@ -154,6 +166,14 @@ class Padibot(BaseLogic):
                 diamondCloseTeleporter.append(diamond)
         return len(diamondCloseTeleporter) >= 3
         # Hanya jika worth it, diamond > 3
+    
+    # Mencari jarak dari teleporter ke base
+    def goToBaseWithTeleporter(self, board_bot: GameObject, board: Board):
+        teleporters = self.findAllTeleporter(board_bot, board)
+        distToBase = abs(board_bot.properties.base.y - teleporters[1].position.y) + abs(board_bot.properties.base.x - teleporters[1].position.x)
+        distToBot = abs(board_bot.position.x - teleporters[0].position.x) + abs(board_bot.position.y - teleporters[0].position.y)
+        if (distToBase + distToBot < self.basedistance(board_bot)):
+            self.goal_position = teleporters[0].position
 
     #! GET DIRECTIONS
     # Set direction and move, 2nd main function
@@ -188,12 +208,12 @@ class Padibot(BaseLogic):
         current_position = board_bot.position
         
         # kalau mepet waktu, langsung balik ke base
-        if self.basedistance(board_bot, board) == props.milliseconds_left:
+        if self.basedistance(board_bot) == props.milliseconds_left:
             base = board_bot.properties.base
             self.goal_position = base
         
         # kalau pas cari diamond lewat base, bot mampir ke base dulu
-        elif (self.basedistance(board_bot, board)==2 and props.diamonds >2) or (self.basedistance(board_bot, board)==1 and props.diamonds >0):
+        elif (self.basedistance(board_bot)==2 and props.diamonds >2) or (self.basedistance(board_bot)==1 and props.diamonds >0):
             base = board_bot.properties.base
             self.goal_position = base
 
@@ -207,16 +227,16 @@ class Padibot(BaseLogic):
         elif props.diamonds >=3:
             print("diamond 3")
             # ternyata ada diamond dekat base, maka bot akan ke sana
-            if self.cekdiamondbase(board_bot,board):
-                diamond_list = self.diamondsaroundbase(board_bot,board)
-                self.goal_position = self.closestdiamondbase(board_bot,diamond_list)
-            # kalau pas jalan pulang ternyata ada diamond yang deket dan inventory belum penuh (sekalian ambil)
-            elif self.closestdiamond(board_bot,board) is not None:
+            if self.closestdiamond(board_bot,board) is not None:
                 if self.closestdiamonddist(board_bot,board)==1:
                     self.goal_position = self.closestdiamond(board_bot,board)
                 else:
                     base = board_bot.properties.base
                     self.goal_position = base
+            elif self.cekdiamondbase(board_bot,board):
+                diamond_list = self.diamondsaroundbase(board_bot,board)
+                self.goal_position = self.closestdiamondbase(board_bot,diamond_list)
+            # kalau pas jalan pulang ternyata ada diamond yang deket dan inventory belum penuh (sekalian ambil)
             else:
             # balik ke base karena diamond sudah banyak
                 base = board_bot.properties.base
@@ -230,6 +250,8 @@ class Padibot(BaseLogic):
                 print("diamond base")
                 diamond_list = self.diamondsaroundbase(board_bot,board)
                 self.goal_position = self.closestdiamondbase(board_bot,diamond_list)
+            elif (self.chaseBots(board_bot, board)):
+                self.chaseSteps += 1
             # kalau gak ada baru cari yang lebih jauh
             # Prioritaskan red diamond jika lebih dekat dari pada diamond biasa
             elif self.closestreddiamond(board_bot, board) is not None: 
@@ -242,12 +264,6 @@ class Padibot(BaseLogic):
                         self.goal_position = self.closestdiamond(board_bot, board)
                 else: # misal sisa red diamonds aja
                     self.goal_position = self.closestreddiamond(board_bot,board)
-            # Kalau terlalu jauh dan diamond nya sisa dikit, ke red button
-            # Dengan kondisi dipastikan diamonds di sekitar base atau kita memang jauh, langsung jadikan prioritas untuk ke teleporter
-            elif self.detectDiamondTeleporter(board_bot, board) and not self.isPortal:
-                self.goal_position = self.findAllTeleporter(board_bot, board)[0].position
-                print("teleporter")
-                self.isPortal = not self.isPortal
             else: # sisa diamond biru
                 print("diamond biru")
                 self.goal_position = self.closestdiamond(board_bot, board)
@@ -255,7 +271,10 @@ class Padibot(BaseLogic):
         # bot sedang tidak ada tujuan maka di arahkan ke base
         if self.goal_position is None:
             self.goal_position = board_bot.properties.base
-
+        
+        if self.goal_position == board_bot.properties.base:
+            self.goToBaseWithTeleporter(board_bot, board)
+        
         delta_x, delta_y = self.get_directions(
             current_position.x,
             current_position.y,
