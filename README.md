@@ -38,7 +38,7 @@ git clone https://github.com/bagassambega/Tubes1_ilmu-padi.git
 ```
 2. Clone repository ini sebagai _game engine_.
 ```
-git clone 
+git clone https://github.com/haziqam/tubes1-IF2211-game-engine.git
 ```
 3. Pemain dapat menjalankan bot dengan membuat file run.bat atau run.sh
 4. Kemudian untuk menjalankan keseluruhan bot dalam file tersebut, buka terminal dan jalankan perintah: 
@@ -49,4 +49,8 @@ atau
 ```
 chmod +x ./run-bots.sh
 ./run-bots.sh
+```
+5. Pemain dapat menjalankan bot secara manual dengan memasukkan _command_ :
+```
+python main.py --logic Padibot --email=ilmupadi@email.com --name=padibot --password=123456 --team etimo
 ```
