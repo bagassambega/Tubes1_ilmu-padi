@@ -58,35 +58,12 @@ class Padibot(BaseLogic):
             return None  # Jika tidak ada blue diamond, kembalikan None
         closest_red_diamond = min(diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
         return closest_red_diamond.position
-    
-    # cari red diamond terdekat dengan bot (bebas di mana aja)
-    def closestreddiamond(self, board_bot: GameObject, board:Board):
-        current_position = board_bot.position
-        red_diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 2]
-
-        if not red_diamonds:
-            return None  # Jika tidak ada red diamond, kembalikan None
-
-        closest_red_diamond = min(red_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
-        return closest_red_diamond.position
 
     # mencari jarak bot dengan diamond terdekat
     def closestdiamonddist(self, board_bot: GameObject,board: Board):
         closest = self.closestdiamond(board_bot, board)
         current_position = board_bot.position
         return abs(closest.x-current_position.x)+abs(closest.y-current_position.y)
-    
-    # mencari jarak bot dengan diamond merah terdekat
-    def closestreddiamonddist(self, board_bot: GameObject, board: Board):
-        current_position = board_bot.position
-        red_diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 2]
-
-        if not red_diamonds:
-            return None  # Jika tidak ada red diamond, kembalikan None
-
-        closest_red_diamond = min(red_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
-        distance = abs(closest_red_diamond.position.x - current_position.x) + abs(closest_red_diamond.position.y - current_position.y)
-        return distance
     
     # mencari jarak bot dengan base
     def basedistance(self, board_bot: GameObject):
@@ -131,6 +108,29 @@ class Padibot(BaseLogic):
             return False
     
     #! RED BUTTON
+    # cari red diamond terdekat dengan bot (bebas di mana aja)
+    def closestreddiamond(self, board_bot: GameObject, board:Board):
+        current_position = board_bot.position
+        red_diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 2]
+
+        if not red_diamonds:
+            return None  # Jika tidak ada red diamond, kembalikan None
+
+        closest_red_diamond = min(red_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
+        return closest_red_diamond.position
+    
+    # mencari jarak bot dengan diamond merah terdekat
+    def closestreddiamonddist(self, board_bot: GameObject, board: Board):
+        current_position = board_bot.position
+        red_diamonds = [diamond for diamond in board.diamonds if diamond.properties.points == 2]
+
+        if not red_diamonds:
+            return None  # Jika tidak ada red diamond, kembalikan None
+
+        closest_red_diamond = min(red_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
+        distance = abs(closest_red_diamond.position.x - current_position.x) + abs(closest_red_diamond.position.y - current_position.y)
+        return distance
+    
     # Mencari red button
     def findRedButton(self, board: Board):
         for item in board.game_objects:
