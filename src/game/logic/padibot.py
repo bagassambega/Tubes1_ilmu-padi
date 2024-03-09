@@ -103,7 +103,7 @@ class Padibot(BaseLogic):
     def findAllBots(self, board_bot: GameObject, board: Board):
         listBots = []
         for bot in board.bots:
-            if (bot.id != board_bot.id):
+            if (bot.id != board_bot.id and bot.properties.base.x != bot.position.x and bot.properties.base.y != bot.position.y):
                 if (bot.properties.diamonds > board_bot.properties.diamonds and bot.properties.diamonds >= 3):
                     listBots.append(bot)
         return listBots
