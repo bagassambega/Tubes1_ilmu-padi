@@ -215,7 +215,7 @@ class Padibot(BaseLogic):
             self.goal_position = base
 
         # kalau diamond yang dimiliki sudah lebih dari 3 maka bot diarahkan balik ke base
-        elif props.diamonds >3:
+        elif props.diamonds >= 3:
             # ternyata ada diamond dekat base, maka bot akan ke sana
             if self.closestdiamond(board_bot,board) is not None or self.closestreddiamond(board_bot,board) is not None:
                 if props.diamonds == 3 and self.closestreddiamonddist(board_bot,board) <= 3:
@@ -235,11 +235,9 @@ class Padibot(BaseLogic):
                 self.goal_position = base
             
         # kalau masih kurang 3 akan cari diamond
-        elif props.diamonds <=3:
-            print("diamond kurang dari 3")
+        elif props.diamonds < 3:
             # didahuluin cari yang ada di sekitar base dulu (bot kita juga di sekitar base)
             if (self.cekdiamondbase(board_bot,board) and self.botaroundbase(board_bot)) or (self.cekdiamondbase(board_bot,board) and len(self.diamondsaroundbase(board_bot,board))>=3) :
-                print("diamond base")
                 diamond_list = self.diamondsaroundbase(board_bot,board)
                 self.goal_position = self.closestdiamondbase(board_bot,diamond_list)
             elif (self.chaseBots(board_bot, board)):
@@ -251,15 +249,12 @@ class Padibot(BaseLogic):
             elif self.closestreddiamond(board_bot, board) is not None: 
                 if (self.closestdiamond(board_bot, board) is not None):
                     if (self.closestreddiamonddist(board_bot, board) < self.closestdiamonddist(board_bot, board)) :
-                        print("red diamond @1")
                         self.goal_position = self.closestreddiamond(board_bot,board)
                     else:
-                        print("red diamond @2")
                         self.goal_position = self.closestdiamond(board_bot, board)
                 else: # misal sisa red diamonds aja
                     self.goal_position = self.closestreddiamond(board_bot,board)
             else: # sisa diamond biru
-                print("diamond biru")
                 self.goal_position = self.closestdiamond(board_bot, board)
                 
         # bot sedang tidak ada tujuan maka di arahkan ke base
