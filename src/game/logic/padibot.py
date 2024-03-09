@@ -26,25 +26,6 @@ class Padibot(BaseLogic):
         
         return diamond_loc
     
-    # Prioritasin diamond merah jika salah satu lebih dekat ke diamond merah
-    def prioritizereddiamond(self, board_bot: GameObject, board: Board):
-        current_position = board_bot.position
-
-        all_diamonds = board.diamonds
-        red_diamonds = [diamond for diamond in all_diamonds if diamond.properties.points == 2]
-        
-        if not red_diamonds:
-            return
-        
-        closest_red_diamond = min(red_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))        
-        closest_normal_diamond = min(all_diamonds, key=lambda diamond: abs(diamond.position.x - current_position.x) + abs(diamond.position.y - current_position.y))
-        
-        # Ambil diamond merah jika letaknya sangat dekat dibandingkan dengan diamond biasa
-        if abs(closest_red_diamond.position.x - current_position.x) + abs(closest_red_diamond.position.y - current_position.y) < abs(closest_normal_diamond.position.x - current_position.x) + abs(closest_normal_diamond.position.y - current_position.y):
-            self.goal_position = closest_red_diamond.position
-        else:
-            self.goal_position = closest_normal_diamond.position
-    
     # memeriksa apakah lokasi bot lagi di sekitar base
     def botaroundbase(self, board_bot: GameObject):
         props = board_bot.properties
@@ -205,13 +186,9 @@ class Padibot(BaseLogic):
     def next_move(self, board_bot: GameObject, board: Board):
         props = board_bot.properties
         current_position = board_bot.position
-
-        max_travel_time = props.milliseconds_left # 1 detik buat jaga-jaga
-        distance_to_base = abs(props.base.x - current_position.x) + abs(props.base.y - current_position.y)
-        time_to_return = distance_to_base #sesuain disini kalau bot kita bisa gerak lbh cepet dr 1 detik
         
         # kalau mepet waktu, langsung balik ke base
-        if time_to_return >= max_travel_time:
+        if self.basedistance(board_bot, board) == props.milliseconds_left:
             base = board_bot.properties.base
             self.goal_position = base
         
@@ -275,7 +252,6 @@ class Padibot(BaseLogic):
                 print("diamond biru")
                 self.goal_position = self.closestdiamond(board_bot, board)
                 
-
         # bot sedang tidak ada tujuan maka di arahkan ke base
         if self.goal_position is None:
             self.goal_position = board_bot.properties.base
